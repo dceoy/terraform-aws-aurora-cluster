@@ -83,6 +83,11 @@ output "rds_cluster_instance_writer" {
   value       = aws_rds_cluster_instance.db.writer
 }
 
+output "rds_cluster_instance_endpoint" {
+  description = "RDS cluster instance endpoint"
+  value       = aws_rds_cluster_instance.db.endpoint
+}
+
 output "rds_cluster_instance_availability_zone" {
   description = "RDS cluster instance availability zone"
   value       = aws_rds_cluster_instance.db.availability_zone
@@ -91,4 +96,9 @@ output "rds_cluster_instance_availability_zone" {
 output "rds_cluster_maintenance_iam_role_arn" {
   description = "RDS cluster maintenance IAM role ARN"
   value       = aws_iam_role.maintenance.arn
+}
+
+output "rds_cluster_secretsmanager_secret_arns" {
+  description = "RDS cluster Secrets Manager secret ARNs for the master user"
+  value       = aws_rds_cluster.db.master_user_secret[*].secret_arn
 }

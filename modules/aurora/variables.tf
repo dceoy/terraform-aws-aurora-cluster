@@ -386,3 +386,9 @@ variable "rds_cluster_maintenance_iam_role_max_session_duration" {
     error_message = "IAM role maximum session duration must be between 3600 and 43200"
   }
 }
+
+variable "rds_cluster_database_user_to_create" {
+  description = "Database user to create in the RDS cluster"
+  type        = string
+  default     = null
+}

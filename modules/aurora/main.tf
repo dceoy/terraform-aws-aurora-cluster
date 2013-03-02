@@ -294,3 +294,26 @@ resource "aws_iam_role_policy" "maintenance" {
     ]
   })
 }
+
+data "aws_secretsmanager_secret" "db" {
+  arn = aws_rds_cluster.db.master_user_secret[0].secret_arn
+}
+
+data "aws_secretsmanager_secret_version" "db" {
+  secret_id = data.aws_secretsmanager_secret.db.id
+}
+
+resource "terraform_data" "create_iam_user" {
+  count            = var.rds_cluster_database_user_to_create != null ? 1 : 0
+  depends_on       = [aws_rds_cluster_instance.db]
+  triggers_replace = [aws_rds_cluster.db.endpoint]
+  provisioner "local-exec" {
+    command = <<-EOT
+    mysql \
+      --host=${aws_rds_cluster.db.endpoint} \
+      --user=${aws_rds_cluster.db.master_username} \
+      --password='${jsondecode(data.aws_secretsmanager_secret_version.db.secret_string).password}' \
+      --execute="CREATE USER '${var.rds_cluster_database_user_to_create}' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS'; GRANT ALL PRIVILEGES ON *.* TO ${var.rds_cluster_database_user_to_create}; FLUSH PRIVILEGES;"
+    EOT
+  }
+}
