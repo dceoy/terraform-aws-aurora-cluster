@@ -10,7 +10,7 @@ output "rds_cluster_cloudwatch_logs_log_group_names" {
 
 output "rds_cluster_subnet_group_id" {
   description = "RDS cluster subnet group ID"
-  value       = aws_db_subnet_group.rds.id
+  value       = aws_db_subnet_group.db.id
 }
 
 output "rds_cluster_parameter_group_id" {

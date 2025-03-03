@@ -37,7 +37,7 @@ resource "aws_security_group" "rds" {
 
 # trivy:ignore:avd-aws-0017
 resource "aws_cloudwatch_log_group" "rds" {
-  for_each          = toset(var.enabled_cloudwatch_logs_exports)
+  for_each          = toset(var.rds_cluster_enabled_cloudwatch_logs_exports)
   name              = "/aws/rds/cluster/${aws_rds_cluster.db.cluster_identifier}/${each.key}"
   retention_in_days = var.cloudwatch_logs_retention_in_days
   log_group_class   = var.cloudwatch_logs_log_group_class
@@ -84,12 +84,12 @@ resource "aws_rds_cluster_parameter_group" "db" {
 }
 
 resource "aws_db_parameter_group" "db" {
-  count       = var.rds_cluster_db_parameter_group_family != null && length(var.rds_cluster_db_parameter_group_parameters) > 0 ? 1 : 0
+  count       = var.rds_cluster_instance_parameter_group_family != null && length(var.rds_cluster_instance_parameter_group_parameters) > 0 ? 1 : 0
   name_prefix = "${local.rds_cluster_name}-instance-parameter-group-"
   description = "${local.rds_cluster_name}-instance-parameter-group"
-  family      = var.rds_cluster_db_parameter_group_family
+  family      = var.rds_cluster_instance_parameter_group_family
   dynamic "parameter" {
-    for_each = var.rds_cluster_db_parameter_group_parameters
+    for_each = var.rds_cluster_instance_parameter_group_parameters
     content {
       name         = parameter.value.name
       value        = parameter.value.value
@@ -115,18 +115,18 @@ resource "aws_rds_cluster" "db" {
   engine_mode                           = var.rds_cluster_scalability_type == "limitless" ? "" : var.rds_cluster_engine_mode
   engine_version                        = var.rds_cluster_engine_version
   engine_lifecycle_support              = var.rds_cluster_engine_lifecycle_support
-  db_subnet_group_name                  = aws_rds_cluster_db_subnet_group.db.name
+  db_subnet_group_name                  = aws_db_subnet_group.db.name
   vpc_security_group_ids                = [aws_security_group.rds.id]
   port                                  = local.rds_cluster_port
   enabled_cloudwatch_logs_exports       = var.rds_cluster_enabled_cloudwatch_logs_exports
-  kms_key_id                            = var.kms_key_id
+  kms_key_id                            = var.kms_key_arn
   db_cluster_parameter_group_name       = length(aws_rds_cluster_parameter_group.db) > 0 ? aws_rds_cluster_parameter_group.db[0].id : null
   db_instance_parameter_group_name      = length(aws_db_parameter_group.db) > 0 ? aws_db_parameter_group.db[0].id : null
   allocated_storage                     = var.rds_cluster_allocated_storage
   allow_major_version_upgrade           = var.rds_cluster_allow_major_version_upgrade
   apply_immediately                     = var.rds_cluster_apply_immediately
   availability_zones                    = var.rds_cluster_availability_zones
-  backtrack_window                      = var.rds_cluster_engine == "aurora-mysql" || var.rds_cluster_engine == "aurora" ? var.backtrack_window : null
+  backtrack_window                      = var.rds_cluster_engine == "aurora-mysql" || var.rds_cluster_engine == "aurora" ? var.rds_cluster_backtrack_window : null
   backup_retention_period               = var.rds_cluster_backup_retention_period
   ca_certificate_identifier             = var.rds_cluster_ca_certificate_identifier
   cluster_scalability_type              = var.rds_cluster_scalability_type
@@ -143,25 +143,25 @@ resource "aws_rds_cluster" "db" {
   iam_database_authentication_enabled   = var.rds_cluster_iam_database_authentication_enabled
   iops                                  = var.rds_cluster_iops
   manage_master_user_password           = true
-  master_user_secret_kms_key_id         = var.kms_key_id
+  master_user_secret_kms_key_id         = var.kms_key_arn
   master_username                       = var.rds_cluster_master_username
   monitoring_interval                   = var.rds_cluster_monitoring_interval
   monitoring_role_arn                   = length(aws_iam_role.monitoring) > 0 ? aws_iam_role.monitoring[0].arn : null
   network_type                          = var.rds_cluster_network_type
   performance_insights_enabled          = var.rds_cluster_performance_insights_enabled
-  performance_insights_kms_key_id       = var.rds_cluster_performance_insights_enabled ? var.kms_key_id : null
+  performance_insights_kms_key_id       = var.rds_cluster_performance_insights_enabled ? var.kms_key_arn : null
   performance_insights_retention_period = var.rds_cluster_performance_insights_enabled ? var.rds_cluster_performance_insights_retention_period : null
   preferred_backup_window               = var.rds_cluster_preferred_backup_window
   preferred_maintenance_window          = var.rds_cluster_preferred_maintenance_window
   skip_final_snapshot                   = var.rds_cluster_final_snapshot_identifier != null ? false : null
-  storage_encrypted                     = var.kms_key_id != null
+  storage_encrypted                     = true
   storage_type                          = var.rds_cluster_storage_type
   dynamic "serverlessv2_scaling_configuration" {
-    for_each = var.rds_cluster_engine_mode == "provisioned" && (var.cluster_serverlessv2_scaling_configuration_max_capacity != null || var.cluster_serverlessv2_scaling_configuration_min_capacity != null || var.cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause != null) ? [true] : []
+    for_each = var.rds_cluster_engine_mode == "provisioned" && (var.rds_cluster_serverlessv2_scaling_configuration_max_capacity != null || var.rds_cluster_serverlessv2_scaling_configuration_min_capacity != null || var.rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause != null) ? [true] : []
     content {
-      max_capacity             = var.cluster_serverlessv2_scaling_configuration_max_capacity
-      min_capacity             = var.cluster_serverlessv2_scaling_configuration_min_capacity
-      seconds_until_auto_pause = var.cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause
+      max_capacity             = var.rds_cluster_serverlessv2_scaling_configuration_max_capacity
+      min_capacity             = var.rds_cluster_serverlessv2_scaling_configuration_min_capacity
+      seconds_until_auto_pause = var.rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause
     }
   }
   tags = {

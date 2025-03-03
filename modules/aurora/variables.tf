@@ -93,13 +93,13 @@ variable "rds_cluster_engine_lifecycle_support" {
 }
 
 variable "rds_cluster_parameter_group_family" {
-  description = "Cluster parameter group family for the RDS cluster"
+  description = "Parameter group family for the RDS cluster"
   type        = string
   default     = null
 }
 
 variable "rds_cluster_parameter_group_parameters" {
-  description = "List of the cluster parameters to apply for the RDS cluster"
+  description = "List of the parameters to apply for the RDS cluster"
   type        = list(map(string))
   default     = []
   validation {
@@ -108,19 +108,19 @@ variable "rds_cluster_parameter_group_parameters" {
   }
 }
 
-variable "rds_cluster_db_parameter_group_family" {
-  description = "DB parameter group family for the RDS cluster"
+variable "rds_cluster_instance_parameter_group_family" {
+  description = "Parameter group family for the RDS cluster instances"
   type        = string
   default     = null
 }
 
-variable "rds_cluster_db_parameter_group_parameters" {
-  description = "List of the DB parameters to apply for the RDS cluster"
+variable "rds_cluster_instance_parameter_group_parameters" {
+  description = "List of the parameters to apply for the RDS cluster instances"
   type        = list(map(string))
   default     = []
   validation {
-    condition     = alltrue([for m in var.rds_cluster_parameter_group_parameters : alltrue([for k in keys(m) : contains(["name", "value", "apply_method"], k)])])
-    error_message = "RDS cluster parameter group parameters allow only name, value, and apply_method as keys"
+    condition     = alltrue([for m in var.rds_cluster_instance_parameter_group_parameters : alltrue([for k in keys(m) : contains(["name", "value", "apply_method"], k)])])
+    error_message = "RDS cluster instance parameter group parameters allow only name, value, and apply_method as keys"
   }
 }
 
@@ -174,7 +174,7 @@ variable "rds_cluster_backup_retention_period" {
   default     = 1
 }
 
-variable "rds_cluster_ca_cert_identifier" {
+variable "rds_cluster_ca_certificate_identifier" {
   description = "CA certificate identifier to use for the multi-AZ RDS cluster's server certificate"
   type        = string
   default     = null
@@ -355,7 +355,7 @@ variable "rds_cluster_serverlessv2_scaling_configuration_min_capacity" {
 
 variable "rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause" {
   description = "Time in seconds before the Aurora Serverless v2 DB cluster in provisioned DB engine mode is paused"
-  type        = bool
+  type        = number
   default     = null
   validation {
     condition     = var.rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause == null || (var.rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause >= 300 && var.rds_cluster_serverlessv2_scaling_configuration_seconds_until_auto_pause <= 86400)
