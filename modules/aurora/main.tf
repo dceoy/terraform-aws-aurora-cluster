@@ -219,7 +219,7 @@ resource "aws_rds_cluster_instance" "db" {
   preferred_maintenance_window = aws_rds_cluster.db.preferred_maintenance_window
   instance_class               = var.rds_cluster_instance_class
   db_subnet_group_name         = aws_db_subnet_group.db.name
-  apply_immediately            = var.rds_cluster_instance_apply_immediately
+  apply_immediately            = var.rds_cluster_apply_immediately
   auto_minor_version_upgrade   = var.rds_cluster_instance_auto_minor_version_upgrade
   copy_tags_to_snapshot        = var.rds_cluster_copy_tags_to_snapshot
   db_parameter_group_name      = length(aws_db_parameter_group.db) > 0 ? aws_db_parameter_group.db[0].id : null

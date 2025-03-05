@@ -3,5 +3,5 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/dceoy/terraform-aws-vpc-for-slc.git//modules/kms?ref=main"
+  source = "${get_repo_root()}/modules/kms"
 }

@@ -8,20 +8,26 @@ variable "env_type" {
   type        = string
 }
 
-variable "private_subnet_ids" {
-  description = "Private subnet IDs"
-  type        = list(string)
-}
-
 variable "vpc_id" {
   description = "VPC ID"
   type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "Private subnet IDs"
+  type        = list(string)
 }
 
 variable "ingress_security_group_ids" {
   description = "Ingress security group IDs"
   type        = list(string)
   default     = []
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN"
+  type        = string
+  default     = null
 }
 
 variable "cloudwatch_logs_retention_in_days" {
@@ -42,12 +48,6 @@ variable "cloudwatch_logs_log_group_class" {
     condition     = contains(["STANDARD", "INFREQUENT_ACCESS"], var.cloudwatch_logs_log_group_class)
     error_message = "CloudWatch Logs log group class must be STANDARD or INFREQUENT_ACCESS"
   }
-}
-
-variable "kms_key_arn" {
-  description = "KMS key ARN"
-  type        = string
-  default     = null
 }
 
 variable "iam_role_force_detach_policies" {
@@ -197,7 +197,7 @@ variable "rds_cluster_copy_tags_to_snapshot" {
 }
 
 variable "rds_cluster_database_insights_mode" {
-  description = "The mode of Database Insights to enable for the DB cluster. Valid values: standard, advanced"
+  description = "Database Insights mode to enable for the RDS cluster"
   type        = string
   default     = null
   validation {
@@ -207,7 +207,7 @@ variable "rds_cluster_database_insights_mode" {
 }
 
 variable "rds_cluster_db_cluster_instance_class" {
-  description = "Compute and memory capacity of each DB instance in the Multi-AZ DB cluster (e.g., db.m6g.xlarge)"
+  description = "Compute and memory capacity of each DB instance in the multi-AZ RDS cluster (e.g., db.m6g.xlarge)"
   type        = string
   default     = null
 }
@@ -261,7 +261,7 @@ variable "rds_cluster_iam_database_authentication_enabled" {
 }
 
 variable "rds_cluster_iops" {
-  description = "Amount of Provisioned IOPS (input/output operations per second) to be initially allocated for each DB instance in the multi-AZ RDS cluster"
+  description = "Amount of provisioned IOPS (input/output operations per second) to be initially allocated for each DB instance in the multi-AZ RDS cluster"
   type        = number
   default     = null
   validation {
@@ -367,12 +367,6 @@ variable "rds_cluster_instance_class" {
   description = "Instance type to use at master instance for the RDS cluster"
   type        = string
   default     = "db.serverless"
-}
-
-variable "rds_cluster_instance_apply_immediately" {
-  description = "Whether to apply any RDS cluster instance modifications immediately, or during the next maintenance window"
-  type        = bool
-  default     = false
 }
 
 variable "rds_cluster_instance_auto_minor_version_upgrade" {
