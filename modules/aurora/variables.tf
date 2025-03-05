@@ -59,7 +59,7 @@ variable "iam_role_force_detach_policies" {
 variable "rds_cluster_engine" {
   description = "RDS cluster database engine"
   type        = string
-  default     = "aurora-postgresql"
+  default     = "aurora-mysql"
   validation {
     condition     = contains(["aurora-postgresql", "aurora-mysql"], var.rds_cluster_engine)
     error_message = "RDS cluster engine must be aurora-postgresql or aurora-mysql"
@@ -258,16 +258,6 @@ variable "rds_cluster_iam_database_authentication_enabled" {
   description = "Whether to enable IAM database authentication for the RDS cluster"
   type        = bool
   default     = null
-}
-
-variable "rds_cluster_iops" {
-  description = "Amount of provisioned IOPS (input/output operations per second) to be initially allocated for each DB instance in the multi-AZ RDS cluster"
-  type        = number
-  default     = null
-  validation {
-    condition     = var.rds_cluster_iops == null || (var.rds_cluster_iops >= 0.5 && var.rds_cluster_iops <= 50)
-    error_message = "RDS cluster IOPS must be a multiple between .5 and 50"
-  }
 }
 
 variable "rds_cluster_master_username" {

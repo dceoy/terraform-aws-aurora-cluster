@@ -109,8 +109,8 @@ resource "aws_db_parameter_group" "db" {
 # trivy:ignore:AVD-AWS-0077
 # trivy:ignore:AVD-AWS-0343
 resource "aws_rds_cluster" "db" {
-  database_name                         = local.rds_cluster_name
-  cluster_identifier_prefix             = "${local.rds_cluster_name}-"
+  cluster_identifier                    = local.rds_cluster_name
+  database_name                         = replace(local.rds_cluster_name, "-", "_")
   engine                                = var.rds_cluster_engine
   engine_mode                           = var.rds_cluster_scalability_type == "limitless" ? "" : var.rds_cluster_engine_mode
   engine_version                        = var.rds_cluster_engine_version
@@ -141,10 +141,9 @@ resource "aws_rds_cluster" "db" {
   enable_local_write_forwarding         = var.rds_cluster_enable_local_write_forwarding
   final_snapshot_identifier             = var.rds_cluster_final_snapshot_identifier
   iam_database_authentication_enabled   = var.rds_cluster_iam_database_authentication_enabled
-  iops                                  = var.rds_cluster_iops
   manage_master_user_password           = true
   master_user_secret_kms_key_id         = var.kms_key_arn
-  master_username                       = var.rds_cluster_master_username
+  master_username                       = var.rds_cluster_master_username != null ? var.rds_cluster_master_username : var.system_name
   monitoring_interval                   = var.rds_cluster_monitoring_interval
   monitoring_role_arn                   = length(aws_iam_role.monitoring) > 0 ? aws_iam_role.monitoring[0].arn : null
   network_type                          = var.rds_cluster_network_type
@@ -153,7 +152,7 @@ resource "aws_rds_cluster" "db" {
   performance_insights_retention_period = var.rds_cluster_performance_insights_enabled ? var.rds_cluster_performance_insights_retention_period : null
   preferred_backup_window               = var.rds_cluster_preferred_backup_window
   preferred_maintenance_window          = var.rds_cluster_preferred_maintenance_window
-  skip_final_snapshot                   = var.rds_cluster_final_snapshot_identifier != null ? false : null
+  skip_final_snapshot                   = var.rds_cluster_final_snapshot_identifier == null
   storage_encrypted                     = true
   storage_type                          = var.rds_cluster_storage_type
   dynamic "serverlessv2_scaling_configuration" {
@@ -171,6 +170,8 @@ resource "aws_rds_cluster" "db" {
   }
   lifecycle {
     ignore_changes = [
+      cluster_scalability_type,
+      engine_version,
       global_cluster_identifier,
       replication_source_identifier,
       snapshot_identifier
@@ -212,7 +213,7 @@ resource "aws_iam_role_policy_attachments_exclusive" "monitoring" {
 
 # trivy:ignore:AVD-AWS-0133
 resource "aws_rds_cluster_instance" "db" {
-  identifier_prefix            = "${local.rds_cluster_name}-instance-"
+  identifier                   = "${local.rds_cluster_name}-instance"
   cluster_identifier           = aws_rds_cluster.db.cluster_identifier
   engine                       = aws_rds_cluster.db.engine
   engine_version               = aws_rds_cluster.db.engine_version_actual
@@ -230,5 +231,8 @@ resource "aws_rds_cluster_instance" "db" {
     Name       = "${local.rds_cluster_name}-instance"
     SystemName = var.system_name
     EnvType    = var.env_type
+  }
+  lifecycle {
+    ignore_changes = [engine_version]
   }
 }
