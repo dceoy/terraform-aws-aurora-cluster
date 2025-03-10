@@ -23,8 +23,8 @@ output "rds_cluster_instance_parameter_group_id" {
   value       = length(aws_db_parameter_group.db) > 0 ? aws_db_parameter_group.db[0].id : null
 }
 
-output "rds_monitoring_iam_role_arn" {
-  description = "RDS monitoring IAM role ARN"
+output "rds_cluster_monitoring_iam_role_arn" {
+  description = "RDS cluster monitoring IAM role ARN"
   value       = length(aws_iam_role.monitoring) > 0 ? aws_iam_role.monitoring[0].arn : null
 }
 
@@ -86,4 +86,9 @@ output "rds_cluster_instance_writer" {
 output "rds_cluster_instance_availability_zone" {
   description = "RDS cluster instance availability zone"
   value       = aws_rds_cluster_instance.db.availability_zone
+}
+
+output "rds_cluster_maintenance_iam_role_arn" {
+  description = "RDS cluster maintenance IAM role ARN"
+  value       = aws_iam_role.maintenance.arn
 }

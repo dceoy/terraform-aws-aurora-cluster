@@ -206,6 +206,12 @@ variable "rds_cluster_database_insights_mode" {
   }
 }
 
+variable "rds_cluster_database_name" {
+  description = "Name for an automatically created database on the RDS cluster"
+  type        = string
+  default     = null
+}
+
 variable "rds_cluster_db_cluster_instance_class" {
   description = "Compute and memory capacity of each DB instance in the multi-AZ RDS cluster (e.g., db.m6g.xlarge)"
   type        = string
@@ -258,6 +264,12 @@ variable "rds_cluster_iam_database_authentication_enabled" {
   description = "Whether to enable IAM database authentication for the RDS cluster"
   type        = bool
   default     = null
+}
+
+variable "rds_cluster_iam_roles" {
+  description = "List of ARNs for the IAM roles to associate to the RDS Cluster"
+  type        = list(string)
+  default     = []
 }
 
 variable "rds_cluster_master_username" {
@@ -363,4 +375,14 @@ variable "rds_cluster_instance_auto_minor_version_upgrade" {
   description = "Whether to enable automatic minor engine upgrades for the RDS cluster instances during the maintenance window"
   type        = bool
   default     = true
+}
+
+variable "rds_cluster_maintenance_iam_role_max_session_duration" {
+  description = "The maximum session duration (in seconds) for the RDS cluster maintenance IAM role"
+  type        = number
+  default     = 3600
+  validation {
+    condition     = var.rds_cluster_maintenance_iam_role_max_session_duration >= 3600 && var.rds_cluster_maintenance_iam_role_max_session_duration <= 43200
+    error_message = "IAM role maximum session duration must be between 3600 and 43200"
+  }
 }

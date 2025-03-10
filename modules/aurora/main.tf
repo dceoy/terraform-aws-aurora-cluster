@@ -110,7 +110,6 @@ resource "aws_db_parameter_group" "db" {
 # trivy:ignore:AVD-AWS-0343
 resource "aws_rds_cluster" "db" {
   cluster_identifier                    = local.rds_cluster_name
-  database_name                         = replace(local.rds_cluster_name, "-", "_")
   engine                                = var.rds_cluster_engine
   engine_mode                           = var.rds_cluster_scalability_type == "limitless" ? "" : var.rds_cluster_engine_mode
   engine_version                        = var.rds_cluster_engine_version
@@ -132,6 +131,7 @@ resource "aws_rds_cluster" "db" {
   cluster_scalability_type              = var.rds_cluster_scalability_type
   copy_tags_to_snapshot                 = var.rds_cluster_copy_tags_to_snapshot
   database_insights_mode                = var.rds_cluster_database_insights_mode
+  database_name                         = var.rds_cluster_database_name
   db_cluster_instance_class             = var.rds_cluster_db_cluster_instance_class
   delete_automated_backups              = var.rds_cluster_delete_automated_backups
   deletion_protection                   = var.rds_cluster_deletion_protection
@@ -141,6 +141,7 @@ resource "aws_rds_cluster" "db" {
   enable_local_write_forwarding         = var.rds_cluster_enable_local_write_forwarding
   final_snapshot_identifier             = var.rds_cluster_final_snapshot_identifier
   iam_database_authentication_enabled   = var.rds_cluster_iam_database_authentication_enabled
+  iam_roles                             = var.rds_cluster_iam_roles
   manage_master_user_password           = true
   master_user_secret_kms_key_id         = var.kms_key_arn
   master_username                       = var.rds_cluster_master_username != null ? var.rds_cluster_master_username : var.system_name
@@ -181,8 +182,8 @@ resource "aws_rds_cluster" "db" {
 
 resource "aws_iam_role" "monitoring" {
   count                 = var.rds_cluster_monitoring_interval > 0 ? 1 : 0
-  name                  = "${var.system_name}-${var.env_type}-rds-monitoring-iam-role"
-  description           = "RDS monitoring IAM role"
+  name                  = "${var.system_name}-${var.env_type}-rds-cluster-monitoring-iam-role"
+  description           = "RDS cluster monitoring IAM role"
   force_detach_policies = var.iam_role_force_detach_policies
   path                  = "/"
   assume_role_policy = jsonencode({
@@ -199,7 +200,7 @@ resource "aws_iam_role" "monitoring" {
     ]
   })
   tags = {
-    Name       = "${var.system_name}-${var.env_type}-rds-monitoring-iam-role"
+    Name       = "${var.system_name}-${var.env_type}-rds-cluster-monitoring-iam-role"
     SystemName = var.system_name
     EnvType    = var.env_type
   }
@@ -235,4 +236,61 @@ resource "aws_rds_cluster_instance" "db" {
   lifecycle {
     ignore_changes = [engine_version]
   }
+}
+
+resource "aws_iam_role" "maintenance" {
+  name                  = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-role"
+  description           = "RDS cluster maintenance IAM role"
+  force_detach_policies = var.iam_role_force_detach_policies
+  path                  = "/"
+  max_session_duration  = var.rds_cluster_maintenance_iam_role_max_session_duration
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowRootAccountToAssumeRole"
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${local.account_id}:root"
+        }
+      }
+    ]
+  })
+  tags = {
+    Name       = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-role"
+    SystemName = var.system_name
+    EnvType    = var.env_type
+  }
+}
+
+resource "aws_iam_role_policy" "maintenance" {
+  name = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-policy"
+  role = aws_iam_role.maintenance.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid      = "AllowRDSDBConnect",
+        Effect   = "Allow",
+        Action   = ["rds-db:connect"],
+        Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_identifier}/*"],
+      },
+      {
+        Sid    = "AllowRDSDBDescribe",
+        Effect = "Allow",
+        Action = [
+          "rds:DescribeDBClusters",
+          "rds:DescribeDBInstances"
+        ],
+        Resource = ["arn:aws:rds:${local.region}:${local.account_id}:db:*"],
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/SystemName" = var.system_name
+            "aws:ResourceTag/EnvType"    = var.env_type
+          }
+        }
+      }
+    ]
+  })
 }
