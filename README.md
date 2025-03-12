@@ -1,9 +1,9 @@
-terraform-aws-aurora-data-api
-=============================
+terraform-aws-aurora-cluster
+============================
 
-Terraform module of Amazon Aurora Serverless v2 with RDS Data API
+Terraform module of Amazon Aurora Serverless v2
 
-[![CI](https://github.com/dceoy/terraform-aws-aurora-data-api/actions/workflows/ci.yml/badge.svg)](https://github.com/dceoy/terraform-aws-aurora-data-api/actions/workflows/ci.yml)
+[![CI](https://github.com/dceoy/terraform-aws-aurora-cluster/actions/workflows/ci.yml/badge.svg)](https://github.com/dceoy/terraform-aws-aurora-cluster/actions/workflows/ci.yml)
 
 Installation
 ------------
@@ -11,8 +11,8 @@ Installation
 1.  Check out the repository.
 
     ```sh
-    $ git clone https://github.com/dceoy/terraform-aws-aurora-data-api.git
-    $ cd terraform-aws-aurora-data-api
+    $ git clone https://github.com/dceoy/terraform-aws-aurora-cluster.git
+    $ cd terraform-aws-aurora-cluster
     ````
 
 2.  Install [AWS CLI](https://aws.amazon.com/cli/) and set `~/.aws/config` and `~/.aws/credentials`.
