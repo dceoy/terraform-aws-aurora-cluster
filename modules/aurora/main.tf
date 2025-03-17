@@ -38,12 +38,12 @@ resource "aws_security_group" "rds" {
 # trivy:ignore:avd-aws-0017
 resource "aws_cloudwatch_log_group" "rds" {
   for_each          = toset(var.rds_cluster_enabled_cloudwatch_logs_exports)
-  name              = "/aws/rds/cluster/${aws_rds_cluster.db.cluster_identifier}/${each.key}"
+  name              = "/aws/rds/cluster/${local.rds_cluster_name}/${each.key}"
   retention_in_days = var.cloudwatch_logs_retention_in_days
   log_group_class   = var.cloudwatch_logs_log_group_class
   kms_key_id        = var.kms_key_arn
   tags = {
-    Name       = "/aws/rds/cluster/${aws_rds_cluster.db.cluster_identifier}/${each.key}"
+    Name       = "/aws/rds/cluster/${local.rds_cluster_name}/${each.key}"
     SystemName = var.system_name
     EnvType    = var.env_type
   }
@@ -109,6 +109,7 @@ resource "aws_db_parameter_group" "db" {
 # trivy:ignore:AVD-AWS-0077
 # trivy:ignore:AVD-AWS-0343
 resource "aws_rds_cluster" "db" {
+  depends_on                            = [aws_cloudwatch_log_group.rds]
   cluster_identifier                    = local.rds_cluster_name
   engine                                = var.rds_cluster_engine
   engine_mode                           = var.rds_cluster_scalability_type == "limitless" ? "" : var.rds_cluster_engine_mode
