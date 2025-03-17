@@ -264,9 +264,10 @@ resource "aws_iam_role" "maintenance" {
   }
 }
 
-resource "aws_iam_role_policy" "maintenance" {
-  name = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-policy"
-  role = aws_iam_role.maintenance.id
+resource "aws_iam_policy" "maintenance" {
+  name        = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-policy"
+  description = "RDS cluster maintenance IAM policy"
+  path        = "/"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -293,6 +294,11 @@ resource "aws_iam_role_policy" "maintenance" {
       }
     ]
   })
+}
+
+resource "aws_iam_role_policy_attachment" "maintenance" {
+  role       = aws_iam_role.maintenance.name
+  policy_arn = aws_iam_policy.maintenance.arn
 }
 
 data "aws_secretsmanager_secret" "db" {

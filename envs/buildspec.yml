@@ -1,0 +1,42 @@
+---
+version: 0.2
+env:
+  shell: bash
+  # variables:
+  #   AWS_REGION: us-east-1
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      python: 3.x
+    commands:
+      - date
+      - dnf -y upgrade
+    finally:
+      - echo 'Install phase is completed.'
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - date
+      - df -Th
+      - free -g
+      - grep -ce '^processor\s\+:' /proc/cpuinfo
+      - head -100 /etc/*-release
+      - aws --version
+      - docker --version
+      - docker compose version
+      - python --version
+    finally:
+      - echo 'Pre-build phase is completed.'
+  build:
+    on-failure: ABORT
+    commands:
+      - date
+    finally:
+      - echo 'Build phase is completed.'
+  post_build:
+    on-failure: ABORT
+    commands:
+      - date
+    finally:
+      - echo 'Post-build phase is completed.'

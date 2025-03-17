@@ -93,6 +93,11 @@ output "rds_cluster_instance_availability_zone" {
   value       = aws_rds_cluster_instance.db.availability_zone
 }
 
+output "rds_cluster_maintenance_iam_policy_arn" {
+  description = "RDS cluster maintenance IAM policy ARN"
+  value       = aws_iam_policy.maintenance.arn
+}
+
 output "rds_cluster_maintenance_iam_role_arn" {
   description = "RDS cluster maintenance IAM role ARN"
   value       = aws_iam_role.maintenance.arn
