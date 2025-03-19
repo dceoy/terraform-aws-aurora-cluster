@@ -1,7 +1,9 @@
 locals {
-  repo_root   = get_repo_root()
-  env_vars    = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  ecr_address = "${local.env_vars.locals.account_id}.dkr.ecr.${local.env_vars.locals.region}.amazonaws.com"
+  repo_root                     = get_repo_root()
+  env_vars                      = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  ecr_address                   = "${local.env_vars.locals.account_id}.dkr.ecr.${local.env_vars.locals.region}.amazonaws.com"
+  rds_cluster_master_username   = local.env_vars.locals.system_name
+  rds_cluster_database_name     = local.env_vars.locals.system_name
 }
 
 terraform {
@@ -69,9 +71,10 @@ inputs = {
   cloudwatch_logs_retention_in_days                                       = 30
   cloudwatch_logs_log_group_class                                         = "STANDARD"
   private_subnet_count                                                    = 2
-  public_subnet_count                                                     = 0
+  public_subnet_count                                                     = 2
   subnet_newbits                                                          = 8
-  vpc_interface_endpoint_services                                         = ["rds"]
+  nat_gateway_count                                                       = 0
+  vpc_interface_endpoint_services                                         = []
   iam_role_force_detach_policy                                            = true
   rds_cluster_engine                                                      = "aurora-mysql"
   rds_cluster_engine_version                                              = "8.0.mysql_aurora.3.08.1"
@@ -85,14 +88,14 @@ inputs = {
   rds_cluster_scalability_type                                            = "standard"
   rds_cluster_copy_tags_to_snapshot                                       = true
   rds_cluster_database_insights_mode                                      = "standard"
-  rds_cluster_database_name                                               = local.env_vars.locals.system_name
+  rds_cluster_database_name                                               = local.rds_cluster_database_name
   rds_cluster_delete_automated_backups                                    = true
   rds_cluster_deletion_protection                                         = false
   rds_cluster_enable_local_write_forwarding                               = false
   rds_cluster_enable_http_endpoint                                        = true
   rds_cluster_iam_database_authentication_enabled                         = true
   rds_cluster_iam_roles                                                   = []
-  rds_cluster_master_username                                             = local.env_vars.locals.system_name
+  rds_cluster_master_username                                             = local.rds_cluster_master_username
   rds_cluster_monitoring_interval                                         = 60
   rds_cluster_network_type                                                = "IPV4"
   rds_cluster_performance_insights_enabled                                = true

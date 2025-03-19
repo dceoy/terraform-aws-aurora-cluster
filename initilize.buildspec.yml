@@ -5,7 +5,6 @@ env:
   variables:
     RDS_CA_CERT_URL: https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
     MYSQL_USER_TO_CREATE: iam
-    SQL: 'SELECT user, host FROM mysql.user; SHOW DATABASES;'
 phases:
   install:
     on-failure: ABORT
@@ -36,7 +35,39 @@ phases:
       - set -euo pipefail
       - echo 'Build phase is started.'
       - echo
-      - echo "${SQL}"
+      - |
+        cat <<EOF | tee /tmp/create-iam-auth-user-and-database.sql
+        CREATE USER IF NOT EXISTS '${MYSQL_USER_TO_CREATE}' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
+        GRANT ALL PRIVILEGES ON *.* TO ${MYSQL_USER_TO_CREATE};
+        FLUSH PRIVILEGES;
+        CREATE DATABASE IF NOT EXISTS ${RDS_CLUSTER_DATABASE_NAME};
+        EOF
+      - echo
+      - >
+        aws secretsmanager get-secret-value
+        --secret-id "${RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN}"
+        --query 'SecretString'
+        --output text
+        | jq -r '.password'
+        | xargs -I{} mysql
+        --host "${RDS_CLUSTER_ENDPOINT}"
+        --port "${RDS_CLUSTER_PORT}"
+        --user "${RDS_CLUSTER_USERNAME}"
+        --password '{}'
+        --execute 'source /tmp/create-iam-auth-user-and-database.sql'
+    finally:
+      - echo 'Build phase is completed.'
+  post_build:
+    on-failure: ABORT
+    commands:
+      - set -euo pipefail
+      - echo 'Post-build phase is started.'
+      - echo
+      - |
+        cat <<EOF | tee /tmp/show-users-and-databases.sql
+        SELECT user, host FROM mysql.user;
+        SHOW DATABASES;
+        EOF
       - echo
       - >
         aws rds generate-db-auth-token
@@ -48,13 +79,6 @@ phases:
         --port "${RDS_CLUSTER_PORT}"
         --user "${MYSQL_USER_TO_CREATE}"
         --password '{}'
-        --execute "${SQL}"
-    finally:
-      - echo 'Build phase is completed.'
-  post_build:
-    on-failure: ABORT
-    commands:
-      - set -euo pipefail
-      - echo 'Post-build phase is started.'
+        --execute 'source /tmp/show-users-and-databases.sql'
     finally:
       - echo 'Post-build phase is completed.'

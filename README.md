@@ -37,6 +37,14 @@ Installation
     $ terragrunt run-all apply --working-dir='envs/dev/' --non-interactive
     ```
 
+7.  Create an IAM authentication user in the Aurora cluster using AWS CodeBuild.
+
+    ```sh
+    $ aws codebuild start-build \
+        --project-name slc-dev-codebuild-project \
+        --buildspec-override file://initilize.buildspec.yml
+    ```
+
 Cleanup
 -------
 

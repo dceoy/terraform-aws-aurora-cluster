@@ -40,11 +40,13 @@ dependency "subnet" {
 dependency "aurora" {
   config_path = "../aurora"
   mock_outputs = {
-    rds_cluster_endpoint                   = "mock-cluster.cluster-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_reader_endpoint            = "mock-cluster.cluster-ro-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_instance_endpoint          = "mock-cluster-instance.cluster-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_maintenance_iam_policy_arn = "arn:aws:iam::123456789012:policy/mock-aurora-iam-policy-arn"
-    rds_cluster_secretsmanager_secret_arns = ["arn:aws:secretsmanager:us-east-1:123456789012:secret:mock-aurora-db-secret-arn-1"]
+    rds_cluster_port                          = 3306
+    rds_cluster_endpoint                      = "mock-cluster.cluster-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_reader_endpoint               = "mock-cluster.cluster-ro-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_instance_endpoint             = "mock-cluster-instance.cluster-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_maintenance_iam_policy_arn    = "arn:aws:iam::123456789012:policy/mock-aurora-iam-policy-arn"
+    rds_cluster_secretsmanager_secret_arns    = ["arn:aws:secretsmanager:us-east-1:123456789012:secret:mock-aurora-db-secret-arn-1"]
+    rds_cluster_secretsmanager_iam_policy_arn = "arn:aws:iam::123456789012:policy/mock-aurora-secretsmanager-iam-policy-arn"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
 }
@@ -54,17 +56,20 @@ inputs = {
   codebuild_logs_config_s3_logs_bucket_id = dependency.s3.outputs.io_s3_bucket_id
   codebuild_iam_policy_arns = [
     dependency.aurora.outputs.rds_cluster_maintenance_iam_policy_arn,
+    dependency.aurora.outputs.rds_cluster_secretsmanager_iam_policy_arn,
     dependency.s3.outputs.s3_iam_policy_arn,
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
   ]
   codebuild_environment_environment_variables = {
     "SYSTEM_NAME"                            = include.root.inputs.system_name
     "ENV_TYPE"                               = include.root.inputs.env_type
+    "RDS_CLUSTER_DATABASE_NAME"              = include.root.inputs.rds_cluster_database_name
     "RDS_CLUSTER_MASTER_USERNAME"            = include.root.inputs.rds_cluster_master_username
+    "RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN" = dependency.aurora.outputs.rds_cluster_secretsmanager_secret_arns[0]
+    "RDS_CLUSTER_PORT"                       = dependency.aurora.outputs.rds_cluster_port
     "RDS_CLUSTER_ENDPOINT"                   = dependency.aurora.outputs.rds_cluster_endpoint
     "RDS_CLUSTER_READER_ENDPOINT"            = dependency.aurora.outputs.rds_cluster_reader_endpoint
     "RDS_CLUSTER_INSTANCE_ENDPOINT"          = dependency.aurora.outputs.rds_cluster_instance_endpoint
-    "RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN" = dependency.aurora.outputs.rds_cluster_secretsmanager_secret_arns[0]
   }
   codebuild_vpc_config_vpc_id             = dependency.vpc.outputs.vpc_id
   codebuild_vpc_config_subnets            = dependency.subnet.outputs.private_subnet_ids

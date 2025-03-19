@@ -273,19 +273,19 @@ resource "aws_iam_policy" "maintenance" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid      = "AllowRDSDBConnect",
-        Effect   = "Allow",
-        Action   = ["rds-db:connect"],
-        Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_identifier}/*"],
+        Sid      = "AllowRDSDBConnect"
+        Effect   = "Allow"
+        Action   = ["rds-db:connect"]
+        Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_identifier}/*"]
       },
       {
-        Sid    = "AllowRDSDBDescribe",
-        Effect = "Allow",
+        Sid    = "AllowRDSDBDescribe"
+        Effect = "Allow"
         Action = [
           "rds:DescribeDBClusters",
           "rds:DescribeDBInstances"
         ],
-        Resource = ["arn:aws:rds:${local.region}:${local.account_id}:db:*"],
+        Resource = ["arn:aws:rds:${local.region}:${local.account_id}:db:*"]
         Condition = {
           StringEquals = {
             "aws:ResourceTag/SystemName" = var.system_name
@@ -302,25 +302,37 @@ resource "aws_iam_role_policy_attachment" "maintenance" {
   policy_arn = aws_iam_policy.maintenance.arn
 }
 
-data "aws_secretsmanager_secret" "db" {
-  arn = aws_rds_cluster.db.master_user_secret[0].secret_arn
-}
-
-data "aws_secretsmanager_secret_version" "db" {
-  secret_id = data.aws_secretsmanager_secret.db.id
-}
-
-resource "terraform_data" "create_iam_user" {
-  count            = var.rds_cluster_database_user_to_create != null ? 1 : 0
-  depends_on       = [aws_rds_cluster_instance.db]
-  triggers_replace = [aws_rds_cluster.db.endpoint]
-  provisioner "local-exec" {
-    command = <<-EOT
-    mysql \
-      --host=${aws_rds_cluster.db.endpoint} \
-      --user=${aws_rds_cluster.db.master_username} \
-      --password='${jsondecode(data.aws_secretsmanager_secret_version.db.secret_string).password}' \
-      --execute="CREATE USER '${var.rds_cluster_database_user_to_create}' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS'; GRANT ALL PRIVILEGES ON *.* TO ${var.rds_cluster_database_user_to_create}; FLUSH PRIVILEGES;"
-    EOT
-  }
+resource "aws_iam_policy" "secretsmanager" {
+  name        = "${var.system_name}-${var.env_type}-rds-cluster-secretsmanager-iam-policy"
+  description = "RDS cluster Secrets Manager IAM policy"
+  path        = "/"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = concat(
+      [
+        {
+          Sid      = "AllowSecretsManagerGetSecretValue"
+          Effect   = "Allow"
+          Action   = ["secretsmanager:GetSecretValue"]
+          Resource = "*"
+          Condition = {
+            StringEquals = {
+              "secretsmanager:ResourceTag/SystemName" = var.system_name
+              "secretsmanager:ResourceTag/EnvType"    = var.env_type
+            }
+          }
+        }
+      ],
+      (
+        var.kms_key_arn != null ? [
+          {
+            Sid      = "AllowKMSDecrypt"
+            Effect   = "Allow"
+            Action   = ["kms:Decrypt"]
+            Resource = [var.kms_key_arn]
+          }
+        ] : []
+      )
+    )
+  })
 }

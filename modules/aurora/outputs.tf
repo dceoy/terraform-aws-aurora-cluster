@@ -38,6 +38,11 @@ output "rds_cluster_resource_id" {
   value       = aws_rds_cluster.db.cluster_resource_id
 }
 
+output "rds_cluster_port" {
+  description = "RDS cluster port"
+  value       = aws_rds_cluster.db.port
+}
+
 output "rds_cluster_database_name" {
   description = "RDS cluster database name"
   value       = aws_rds_cluster.db.database_name
@@ -106,4 +111,9 @@ output "rds_cluster_maintenance_iam_role_arn" {
 output "rds_cluster_secretsmanager_secret_arns" {
   description = "RDS cluster Secrets Manager secret ARNs for the master user"
   value       = aws_rds_cluster.db.master_user_secret[*].secret_arn
+}
+
+output "rds_cluster_secretsmanager_iam_policy_arn" {
+  description = "RDS cluster Secrets Manager IAM policy ARN"
+  value       = aws_iam_policy.secretsmanager.arn
 }
