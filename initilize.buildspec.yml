@@ -8,17 +8,15 @@ env:
 phases:
   install:
     on-failure: ABORT
-    runtime-versions:
-      python: 3.x
     commands:
       - set -euo pipefail
       - echo 'Install phase is started.'
-      - dnf -y upgrade
-      - dnf -y install aws-cli jq mariadb105 update-ca-trust
+      - dnf -yq update
+      - dnf -yq install aws-cli jq mariadb105
     finally:
       - aws --version
       - jq --version
-      - mysql --version
+      - mariadb --version
       - echo 'Install phase is completed.'
   pre_build:
     on-failure: ABORT
@@ -34,27 +32,32 @@ phases:
     commands:
       - set -euo pipefail
       - echo 'Build phase is started.'
-      - echo
-      - |
-        cat <<EOF | tee /tmp/create-iam-auth-user-and-database.sql
-        CREATE USER IF NOT EXISTS '${MYSQL_USER_TO_CREATE}' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
-        GRANT ALL PRIVILEGES ON *.* TO ${MYSQL_USER_TO_CREATE};
-        FLUSH PRIVILEGES;
-        CREATE DATABASE IF NOT EXISTS ${RDS_CLUSTER_DATABASE_NAME};
-        EOF
-      - echo
-      - >
-        aws secretsmanager get-secret-value
-        --secret-id "${RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN}"
-        --query 'SecretString'
-        --output text
-        | jq -r '.password'
-        | xargs -I{} mysql
-        --host "${RDS_CLUSTER_ENDPOINT}"
-        --port "${RDS_CLUSTER_PORT}"
-        --user "${RDS_CLUSTER_USERNAME}"
-        --password '{}'
-        --execute 'source /tmp/create-iam-auth-user-and-database.sql'
+      - secret_json="$(
+          aws secretsmanager get-secret-value
+          --secret-id="${RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN}"
+          --query='SecretString'
+          --output=text
+        )"
+      - username="$(echo "${secret_json}" | jq -r '.username')"
+      - password="$(echo "${secret_json}" | jq -r '.password')"
+      - mariadb
+        --verbose
+        --host="${RDS_CLUSTER_ENDPOINT}"
+        --port="${RDS_CLUSTER_PORT}"
+        --user="${username}"
+        --password="${password}"
+        --execute="CREATE DATABASE IF NOT EXISTS ${RDS_CLUSTER_DATABASE_NAME};
+                   SHOW DATABASES;"
+      - mariadb
+        --verbose
+        --host="${RDS_CLUSTER_ENDPOINT}"
+        --port="${RDS_CLUSTER_PORT}"
+        --user="${username}"
+        --password="${password}"
+        --execute="CREATE USER IF NOT EXISTS '${MYSQL_USER_TO_CREATE}' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
+                   GRANT ALL PRIVILEGES ON ${RDS_CLUSTER_DATABASE_NAME}.* TO '${MYSQL_USER_TO_CREATE}';
+                   FLUSH PRIVILEGES;
+                   SHOW GRANTS FOR '${MYSQL_USER_TO_CREATE}';"
     finally:
       - echo 'Build phase is completed.'
   post_build:
@@ -62,23 +65,20 @@ phases:
     commands:
       - set -euo pipefail
       - echo 'Post-build phase is started.'
-      - echo
-      - |
-        cat <<EOF | tee /tmp/show-users-and-databases.sql
-        SELECT user, host FROM mysql.user;
-        SHOW DATABASES;
-        EOF
-      - echo
-      - >
-        aws rds generate-db-auth-token
-        --hostname "${RDS_CLUSTER_ENDPOINT}"
-        --port "${RDS_CLUSTER_PORT}"
-        --username "${MYSQL_USER_TO_CREATE}"
-        | xargs -I{} mysql
-        --host "${RDS_CLUSTER_INSTANCE_ENDPOINT}"
-        --port "${RDS_CLUSTER_PORT}"
-        --user "${MYSQL_USER_TO_CREATE}"
-        --password '{}'
-        --execute 'source /tmp/show-users-and-databases.sql'
+      - token="$(
+          aws rds generate-db-auth-token
+          --hostname="${RDS_CLUSTER_ENDPOINT}"
+          --port="${RDS_CLUSTER_PORT}"
+          --username="${MYSQL_USER_TO_CREATE}"
+        )"
+      - mariadb
+        --verbose
+        --host="${RDS_CLUSTER_INSTANCE_ENDPOINT}"
+        --port="${RDS_CLUSTER_PORT}"
+        --user="${MYSQL_USER_TO_CREATE}"
+        --password="${token}"
+        --ssl
+        --database="${RDS_CLUSTER_DATABASE_NAME}"
+        --execute='SELECT USER(), CURRENT_USER(), VERSION();'
     finally:
       - echo 'Post-build phase is completed.'

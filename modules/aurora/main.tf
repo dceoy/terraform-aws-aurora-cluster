@@ -239,32 +239,6 @@ resource "aws_rds_cluster_instance" "db" {
   }
 }
 
-resource "aws_iam_role" "maintenance" {
-  name                  = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-role"
-  description           = "RDS cluster maintenance IAM role"
-  force_detach_policies = var.iam_role_force_detach_policies
-  path                  = "/"
-  max_session_duration  = var.rds_cluster_maintenance_iam_role_max_session_duration
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowRootAccountToAssumeRole"
-        Action = ["sts:AssumeRole"]
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${local.account_id}:root"
-        }
-      }
-    ]
-  })
-  tags = {
-    Name       = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-role"
-    SystemName = var.system_name
-    EnvType    = var.env_type
-  }
-}
-
 resource "aws_iam_policy" "maintenance" {
   name        = "${var.system_name}-${var.env_type}-rds-cluster-maintenance-iam-policy"
   description = "RDS cluster maintenance IAM policy"
@@ -276,7 +250,7 @@ resource "aws_iam_policy" "maintenance" {
         Sid      = "AllowRDSDBConnect"
         Effect   = "Allow"
         Action   = ["rds-db:connect"]
-        Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_identifier}/*"]
+        Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_resource_id}/*"]
       },
       {
         Sid    = "AllowRDSDBDescribe"
@@ -295,11 +269,6 @@ resource "aws_iam_policy" "maintenance" {
       }
     ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "maintenance" {
-  role       = aws_iam_role.maintenance.name
-  policy_arn = aws_iam_policy.maintenance.arn
 }
 
 resource "aws_iam_policy" "secretsmanager" {

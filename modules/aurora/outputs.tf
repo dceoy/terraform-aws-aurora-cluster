@@ -78,6 +78,11 @@ output "rds_cluster_availability_zones" {
   value       = aws_rds_cluster.db.availability_zones
 }
 
+output "rds_cluster_secretsmanager_secret_arns" {
+  description = "RDS cluster Secrets Manager secret ARNs for the master user"
+  value       = aws_rds_cluster.db.master_user_secret[*].secret_arn
+}
+
 output "rds_cluster_instance_identifier" {
   description = "RDS cluster instance identifier"
   value       = aws_rds_cluster_instance.db.identifier
@@ -101,16 +106,6 @@ output "rds_cluster_instance_availability_zone" {
 output "rds_cluster_maintenance_iam_policy_arn" {
   description = "RDS cluster maintenance IAM policy ARN"
   value       = aws_iam_policy.maintenance.arn
-}
-
-output "rds_cluster_maintenance_iam_role_arn" {
-  description = "RDS cluster maintenance IAM role ARN"
-  value       = aws_iam_role.maintenance.arn
-}
-
-output "rds_cluster_secretsmanager_secret_arns" {
-  description = "RDS cluster Secrets Manager secret ARNs for the master user"
-  value       = aws_rds_cluster.db.master_user_secret[*].secret_arn
 }
 
 output "rds_cluster_secretsmanager_iam_policy_arn" {

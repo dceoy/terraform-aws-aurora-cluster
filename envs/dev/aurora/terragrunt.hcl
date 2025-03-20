@@ -6,8 +6,7 @@ include "root" {
 dependency "vpc" {
   config_path = "../vpc"
   mock_outputs = {
-    vpc_id                        = "vpc-12345678"
-    vpc_default_security_group_id = "sg-12345678"
+    vpc_id = "vpc-12345678"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
 }
@@ -15,7 +14,8 @@ dependency "vpc" {
 dependency "subnet" {
   config_path = "../subnet"
   mock_outputs = {
-    private_subnet_ids = ["subnet-12345678", "subnet-87654321"]
+    private_subnet_ids        = ["subnet-12345678", "subnet-87654321"]
+    private_security_group_id = "sg-12345678"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
 }
@@ -31,7 +31,7 @@ dependency "kms" {
 inputs = {
   vpc_id                     = dependency.vpc.outputs.vpc_id
   private_subnet_ids         = dependency.subnet.outputs.private_subnet_ids
-  ingress_security_group_ids = [dependency.vpc.outputs.vpc_default_security_group_id]
+  ingress_security_group_ids = [dependency.subnet.outputs.private_security_group_id]
   kms_key_arn                = include.root.inputs.create_kms_key ? dependency.kms.outputs.kms_key_arn : null
 }
 

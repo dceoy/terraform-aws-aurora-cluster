@@ -23,8 +23,7 @@ dependency "s3" {
 dependency "vpc" {
   config_path = "../vpc"
   mock_outputs = {
-    vpc_id                        = "vpc-12345678"
-    vpc_default_security_group_id = "sg-12345678"
+    vpc_id = "vpc-12345678"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
 }
@@ -32,7 +31,8 @@ dependency "vpc" {
 dependency "subnet" {
   config_path = "../subnet"
   mock_outputs = {
-    private_subnet_ids = ["subnet-12345678", "subnet-87654321"]
+    private_subnet_ids        = ["subnet-12345678", "subnet-87654321"]
+    private_security_group_id = "sg-12345678"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
 }
@@ -64,7 +64,6 @@ inputs = {
     "SYSTEM_NAME"                            = include.root.inputs.system_name
     "ENV_TYPE"                               = include.root.inputs.env_type
     "RDS_CLUSTER_DATABASE_NAME"              = include.root.inputs.rds_cluster_database_name
-    "RDS_CLUSTER_MASTER_USERNAME"            = include.root.inputs.rds_cluster_master_username
     "RDS_CLUSTER_SECRETS_MANAGER_SECRET_ARN" = dependency.aurora.outputs.rds_cluster_secretsmanager_secret_arns[0]
     "RDS_CLUSTER_PORT"                       = dependency.aurora.outputs.rds_cluster_port
     "RDS_CLUSTER_ENDPOINT"                   = dependency.aurora.outputs.rds_cluster_endpoint
@@ -73,7 +72,7 @@ inputs = {
   }
   codebuild_vpc_config_vpc_id             = dependency.vpc.outputs.vpc_id
   codebuild_vpc_config_subnets            = dependency.subnet.outputs.private_subnet_ids
-  codebuild_vpc_config_security_group_ids = [dependency.vpc.outputs.vpc_default_security_group_id]
+  codebuild_vpc_config_security_group_ids = [dependency.subnet.outputs.private_security_group_id]
 }
 
 terraform {

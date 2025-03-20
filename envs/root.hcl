@@ -1,9 +1,9 @@
 locals {
-  repo_root                     = get_repo_root()
-  env_vars                      = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  ecr_address                   = "${local.env_vars.locals.account_id}.dkr.ecr.${local.env_vars.locals.region}.amazonaws.com"
-  rds_cluster_master_username   = local.env_vars.locals.system_name
-  rds_cluster_database_name     = local.env_vars.locals.system_name
+  repo_root                   = get_repo_root()
+  env_vars                    = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  ecr_address                 = "${local.env_vars.locals.account_id}.dkr.ecr.${local.env_vars.locals.region}.amazonaws.com"
+  rds_cluster_master_username = local.env_vars.locals.system_name
+  rds_cluster_database_name   = local.env_vars.locals.system_name
 }
 
 terraform {
@@ -73,7 +73,7 @@ inputs = {
   private_subnet_count                                                    = 2
   public_subnet_count                                                     = 2
   subnet_newbits                                                          = 8
-  nat_gateway_count                                                       = 0
+  nat_gateway_count                                                       = 2
   vpc_interface_endpoint_services                                         = []
   iam_role_force_detach_policy                                            = true
   rds_cluster_engine                                                      = "aurora-mysql"
