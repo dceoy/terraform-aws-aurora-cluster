@@ -376,19 +376,3 @@ variable "rds_cluster_instance_auto_minor_version_upgrade" {
   type        = bool
   default     = true
 }
-
-variable "rds_cluster_maintenance_iam_role_max_session_duration" {
-  description = "The maximum session duration (in seconds) for the RDS cluster maintenance IAM role"
-  type        = number
-  default     = 3600
-  validation {
-    condition     = var.rds_cluster_maintenance_iam_role_max_session_duration >= 3600 && var.rds_cluster_maintenance_iam_role_max_session_duration <= 43200
-    error_message = "IAM role maximum session duration must be between 3600 and 43200"
-  }
-}
-
-variable "rds_cluster_database_user_to_create" {
-  description = "Database user to create in the RDS cluster"
-  type        = string
-  default     = null
-}
