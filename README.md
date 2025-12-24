@@ -1,19 +1,17 @@
-terraform-aws-aurora-cluster
-============================
+# terraform-aws-aurora-cluster
 
 Terraform module of Amazon Aurora Serverless v2
 
 [![CI](https://github.com/dceoy/terraform-aws-aurora-cluster/actions/workflows/ci.yml/badge.svg)](https://github.com/dceoy/terraform-aws-aurora-cluster/actions/workflows/ci.yml)
 
-Installation
-------------
+## Installation
 
 1.  Check out the repository.
 
     ```sh
     $ git clone https://github.com/dceoy/terraform-aws-aurora-cluster.git
     $ cd terraform-aws-aurora-cluster
-    ````
+    ```
 
 2.  Install [AWS CLI](https://aws.amazon.com/cli/) and set `~/.aws/config` and `~/.aws/credentials`.
 
@@ -45,8 +43,7 @@ Installation
         --buildspec-override file://initilize.buildspec.yml
     ```
 
-Cleanup
--------
+## Cleanup
 
 ```sh
 $ terragrunt run-all destroy --working-dir='envs/dev/' --non-interactive
