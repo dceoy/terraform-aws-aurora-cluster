@@ -44,12 +44,13 @@ dependency "subnet" {
 dependency "aurora" {
   config_path = "../aurora"
   mock_outputs = {
-    rds_cluster_port                          = 3306
-    rds_cluster_endpoint                      = "mock-cluster.cluster-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_reader_endpoint               = "mock-cluster.cluster-ro-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_instance_endpoint             = "mock-cluster-instance.cluster-123456789012.us-east-1.rds.amazonaws.com"
-    rds_cluster_maintenance_iam_policy_arn    = "arn:aws:iam::123456789012:policy/mock-aurora-iam-policy-arn"
-    rds_cluster_secretsmanager_secret_arns    = ["arn:aws:secretsmanager:us-east-1:123456789012:secret:mock-aurora-db-secret-arn-1"]
+    rds_cluster_port                       = 3306
+    rds_cluster_endpoint                   = "mock-cluster.cluster-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_reader_endpoint            = "mock-cluster.cluster-ro-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_instance_endpoint          = "mock-cluster-instance.cluster-123456789012.us-east-1.rds.amazonaws.com"
+    rds_cluster_maintenance_iam_policy_arn = "arn:aws:iam::123456789012:policy/mock-aurora-iam-policy-arn"
+    rds_cluster_secretsmanager_secret_arns = ["arn:aws:secretsmanager:us-east-1:123456789012:secret:mock-aurora-db-secret-arn-1"]
+    # checkov:skip=CKV_SECRET_6:Mock output value for terragrunt validate/plan
     rds_cluster_secretsmanager_iam_policy_arn = "arn:aws:iam::123456789012:policy/mock-aurora-secretsmanager-iam-policy-arn"
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]

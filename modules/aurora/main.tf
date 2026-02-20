@@ -1,5 +1,6 @@
 # trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "rds" {
+  # checkov:skip=CKV_AWS_382:Allow all egress traffic for RDS
   name        = "${var.system_name}-${var.env_type}-rds-sg"
   description = "Security group for RDS"
   vpc_id      = var.vpc_id
@@ -37,6 +38,7 @@ resource "aws_security_group" "rds" {
 
 # trivy:ignore:avd-aws-0017
 resource "aws_cloudwatch_log_group" "rds" {
+  # checkov:skip=CKV_AWS_338:Retention period is configurable via variable
   for_each          = toset(var.rds_cluster_enabled_cloudwatch_logs_exports)
   name              = "/aws/rds/cluster/${local.rds_cluster_name}/${each.key}"
   retention_in_days = var.cloudwatch_logs_retention_in_days
@@ -109,6 +111,9 @@ resource "aws_db_parameter_group" "db" {
 # trivy:ignore:AVD-AWS-0077
 # trivy:ignore:AVD-AWS-0343
 resource "aws_rds_cluster" "db" {
+  # checkov:skip=CKV2_AWS_8:Backup plan of AWS Backup is configurable outside this module
+  # checkov:skip=CKV_AWS_313:Copy tags to snapshots is configurable via variable
+  # checkov:skip=CKV_AWS_139:Deletion protection is configurable via variable
   depends_on                            = [aws_cloudwatch_log_group.rds]
   cluster_identifier                    = local.rds_cluster_name
   engine                                = var.rds_cluster_engine
@@ -215,6 +220,8 @@ resource "aws_iam_role_policy_attachments_exclusive" "monitoring" {
 
 # trivy:ignore:AVD-AWS-0133
 resource "aws_rds_cluster_instance" "db" {
+  # checkov:skip=CKV_AWS_353:Performance insights is configurable via variable
+  # checkov:skip=CKV_AWS_118:Enhanced monitoring interval is configurable via variable
   identifier                   = "${local.rds_cluster_name}-instance"
   cluster_identifier           = aws_rds_cluster.db.cluster_identifier
   engine                       = aws_rds_cluster.db.engine
