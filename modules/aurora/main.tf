@@ -256,6 +256,8 @@ resource "aws_iam_policy" "maintenance" {
       {
         Sid      = "AllowRDSDBConnect"
         Effect   = "Allow"
+        # IAM database authentication requires this permission for scoped DB resources.
+        # nosemgrep: terraform.lang.security.iam.no-iam-resource-exposure.no-iam-resource-exposure
         Action   = ["rds-db:connect"]
         Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_resource_id}/*"]
       },
