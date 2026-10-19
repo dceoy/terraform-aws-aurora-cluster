@@ -1,4 +1,4 @@
-# trivy:ignore:AVD-AWS-0104
+# trivy:ignore:AWS-0104
 resource "aws_security_group" "rds" {
   # checkov:skip=CKV_AWS_382:Allow all egress traffic for RDS
   name        = "${var.system_name}-${var.env_type}-rds-sg"
@@ -36,7 +36,7 @@ resource "aws_security_group" "rds" {
   }
 }
 
-# trivy:ignore:avd-aws-0017
+# trivy:ignore:AWS-0017
 resource "aws_cloudwatch_log_group" "rds" {
   # checkov:skip=CKV_AWS_338:Retention period is configurable via variable
   for_each          = toset(var.rds_cluster_enabled_cloudwatch_logs_exports)
@@ -108,8 +108,8 @@ resource "aws_db_parameter_group" "db" {
   }
 }
 
-# trivy:ignore:AVD-AWS-0077
-# trivy:ignore:AVD-AWS-0343
+# trivy:ignore:AWS-0077
+# trivy:ignore:AWS-0343
 resource "aws_rds_cluster" "db" {
   # checkov:skip=CKV2_AWS_8:Backup plan of AWS Backup is configurable outside this module
   # checkov:skip=CKV_AWS_313:Copy tags to snapshots is configurable via variable
@@ -218,7 +218,7 @@ resource "aws_iam_role_policy_attachments_exclusive" "monitoring" {
   policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"]
 }
 
-# trivy:ignore:AVD-AWS-0133
+# trivy:ignore:AWS-0133
 resource "aws_rds_cluster_instance" "db" {
   # checkov:skip=CKV_AWS_353:Performance insights is configurable via variable
   # checkov:skip=CKV_AWS_118:Enhanced monitoring interval is configurable via variable
@@ -256,7 +256,7 @@ resource "aws_iam_policy" "maintenance" {
       {
         Sid      = "AllowRDSDBConnect"
         Effect   = "Allow"
-        Action   = ["rds-db:connect"]
+        Action   = ["rds-db:connect"] # nosemgrep: terraform.lang.security.iam.no-iam-resource-exposure.no-iam-resource-exposure
         Resource = ["arn:aws:rds-db:${local.region}:${local.account_id}:dbuser:${aws_rds_cluster.db.cluster_resource_id}/*"]
       },
       {
