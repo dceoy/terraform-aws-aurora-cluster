@@ -14,7 +14,7 @@ phases:
     commands:
       - set -euo pipefail
       - echo 'Install phase is started.'
-      - dnf -y upgrade
+      - dnf -y --refresh upgrade
       - dnf -y install aws-cli jq mariadb105 update-ca-trust
     finally:
       - aws --version
