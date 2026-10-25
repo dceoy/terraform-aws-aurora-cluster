@@ -82,5 +82,6 @@ inputs = {
 }
 
 terraform {
-  source = "git::https://github.com/dceoy/terraform-aws-codebuild-for-s3.git//modules/codebuild?ref=main"
+  source                   = "git::https://github.com/dceoy/terraform-aws-codebuild-for-s3.git//modules/codebuild?ref=main"
+  copy_terraform_lock_file = false
 }
