@@ -39,5 +39,6 @@ inputs = {
 }
 
 terraform {
-  source = "${get_repo_root()}/modules/aurora"
+  source                   = "${get_repo_root()}/modules/aurora"
+  copy_terraform_lock_file = false
 }
